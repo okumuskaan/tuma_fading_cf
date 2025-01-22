@@ -143,8 +143,9 @@ class CPU:
 
 
 
-def simulate_distributed_decoder(side, SNR_rx_dB, Y, Ju, Mau, Kau, nAMPIter, B, A, Cx, Cy, n, P, priors, nMCs, d0, rho,
-                        log_priors, all_Covs, withOnsager=False, k_true=None, force_Kmax=3, Kmax=5, Ns=500):
+def simulate_distributed_decoder(
+    side, SNR_rx_dB, Ju, Mau, Kau, nAMPIter, A, n, P, nMCs, d0, rho,
+                        force_Kmax=3, Kmax=5, Ns=500, display_topology=False):
 
     tv_dists = np.zeros(nMCs)
     tv_dists_new = np.zeros(nMCs)
@@ -185,7 +186,7 @@ def simulate_distributed_decoder(side, SNR_rx_dB, Y, Ju, Mau, Kau, nAMPIter, B, 
         # Transmitter
         topology_type = 2
         margin = side/10 if topology_type!=3 else -side/20
-        Y, k, X, zones_infos = transmit(Mus, Maus, Kaus, side, n, F, A, U, Cx, nP, sigma_w, 
+        Y, k, X, _ = transmit(Mus, Maus, Kaus, side, n, F, A, U, Cx, nP, sigma_w, 
                                 nus, zone_centers, rho, d0, margin=margin, force_Kmax=force_Kmax)
         
         Xs = []
@@ -219,4 +220,6 @@ def simulate_distributed_decoder(side, SNR_rx_dB, Y, Ju, Mau, Kau, nAMPIter, B, 
         tv_dists_new[idxMC] = tv_dist_new
 
         print(f"\ttv_dist = {tv_dist}, tv_dist_new = {tv_dist_new}")
+
+    return tv_dists_new
 
