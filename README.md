@@ -36,10 +36,6 @@ Contains test scripts to verify and demonstrate the functionality of the differe
   - `scipy`
   - `matplotlib`
 
-You can install the dependencies using:
-```bash
-pip install -r requirements.txt
-```
 
 ## Usage
 
