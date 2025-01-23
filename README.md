@@ -14,11 +14,11 @@ The project is organized as follows:
 ### `utils/` Folder
 Contains helper files used across different modules:
 - **`helper_bayesian_denoiser.py`**: Implements Bayesian denoiser functions, including sampling-based and Onsager correction approximations.
-- **`helper_cf_tuma_tx.py`**: Provides utility functions for the transmitter, including generating sensor positions, multiplicities, and transmitted signals.
+- **`helper_cf_tuma_tx.py`**: Provides utility functions for the transmitter, including generating use positions, multiplicities, and transmitted signals.
 - **`helper_topology.py`**: Contains functions for creating and visualizing topologies, including hexagonal grids and user placements.
 - **`amp_da_simulation.py`**: Implements the AMP-DA decoder and simulation framework.
 - **`centralized_decoder_simulation.py`**: Implements centralized decoding for TUMA with Monte Carlo simulations.
-- **`distributed_decoder_simulation.py`**: Implements distributed decoding inspired by Erik Larsson’s distributed AMP for TUMA.
+- **`distributed_decoder_simulation.py`**: Implements distributed decoding for TUMA with Monte Carlo simulations.
 
 ### `tests/` Folder
 Contains test scripts to verify and demonstrate the functionality of the different components:
@@ -50,12 +50,11 @@ python tests/test_centralized_decoder_simulation.py
 ### Simulations
 
 
-* **Centralized Decoder Simulation:** Use ``test_centralized_decoder_simulation.py`` to evaluate the centralized decoder with TUMA.
+* **Centralized Decoder Simulation:** Run ``test_centralized_decoder_simulation.py`` to test the centralized decoder for a single scenario.
 
-* **Distributed Decoder Simulation:** Run ``test_distributed_decoder_simulation.py`` for distributed decoding scenarios.
+* **Distributed Decoder Simulation:** Run ``test_distributed_decoder_simulation.py`` to test the distributed decoder.
 
-
-* **AMP-DA Simulation:** Run ``test_amp_da.py`` to test the AMP-DA decoder for a specific scenario.
+* **AMP-DA Simulation:** Run ``test_amp_da.py`` to test the AMP-DA decoder.
 
 ### Customization
 Users can modify the test scripts to experiment with different parameters, such as the number of users, antennas, SNR, and topology settings.
