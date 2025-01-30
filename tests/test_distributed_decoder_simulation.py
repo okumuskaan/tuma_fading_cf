@@ -41,7 +41,7 @@ nMCs = 10
 Kmax = 5
 force_Kmax = 3
 
-# Simulate centralized decoder
+# Simulate distributed decoder
 print("Running Distributed Decoder Simulation...")
 tv_dists = simulate_distributed_decoder(
     side=side, SNR_rx_dB=SNR_rx_dB, Ju=Ju, Mau=Mau, Kau=Kau, nAMPIter=nAMPIter, 
