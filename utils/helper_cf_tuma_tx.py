@@ -542,7 +542,7 @@ def transmit(Mus, Maus, Kaus, side, n, F, A, U, Cx, nP, sigma_w, nus, zone_cente
         X = generate_X(zones_infos, k, B, A, rho, d0, nus, print_info=print_info)
 
     # Add noise to the received signal
-    W = (np.random.randn(n, F) + 1j * np.random.randn(n, F)) * np.sqrt(sigma_w / 2)
+    W = (np.random.randn(n, F) + 1j * np.random.randn(n, F)) * np.sqrt(1 / 2) * sigma_w
 
     # Compute the received signal \( \mathbf{Y} \)
     Y = W.copy()
