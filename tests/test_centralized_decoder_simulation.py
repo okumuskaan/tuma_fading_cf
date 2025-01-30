@@ -28,15 +28,15 @@ rho = 3.67  # Path loss exponent
 d0 = 0.01357  # Reference distance for path loss
 n = 1024  # Block length
 P = 1 / n  # Transmission power
-nAMPIter = 5  # Number of AMP iterations
-Ns = 200  # Number of Monte Carlo samples
+nAMPIter = 20  # Number of AMP iterations
+Ns = 500  # Number of Monte Carlo samples
 nMCs = 100  # Number of Monte Carlo runs
-Kmax = Kau  # Maximum multiplicity
+Kmax = 5  # Maximum multiplicity
 force_Kmax = Kau  # Force maximum multiplicity
 
 # Simulate centralized decoder
 print("Running Centralized Decoder Simulation...")
-tv_dists = simulate_centralized_decoder(Ju, SNR_rx_dB, Mau, Kau, A, n, side, rho, d0, P, nAMPIter, Ns, nMCs, display_topology=True, topology_type=2, rows=3, cols=3)
+tv_dists = simulate_centralized_decoder(Ju, SNR_rx_dB, Mau, Kau, A, n, side, rho, d0, P, nAMPIter, Ns, nMCs, force_Kmax=force_Kmax, Kmax=Kmax, display_topology=True, topology_type=2, rows=3, cols=3)
 
 # Output results
 print("\nSimulation Complete!")
