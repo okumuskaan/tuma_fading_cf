@@ -21,14 +21,17 @@ The project includes simulations and decoding algorithms tailored for large-scal
 │   ├── helper_bayesian_denoiser.py         # Bayesian denoising functions with Onsager term
 │   ├── helper_cf_tuma_tx.py                # Transmitter-side signal and message generation
 │   ├── helper_topology.py                  # Topology creation and visualization tools
-│   ├── amp_da_simulation.py                # AMP-DA decoding and simulation framework
-│   ├── centralized_decoder_simulation.py   # Centralized AMP decoder and simulation wrapper
-│   └── distributed_decoder_simulation.py   # Distributed AMP decoder for CF setup
+│   └── helper_decoder.py                   # Covariance, priors, and helper functions for decoding
+│
+├── centralized_decoder.py                  # Centralized AMP-based decoder for TUMA
+├── distributed_decoder.py                  # Distributed AMP-based decoder for TUMA
+├── TUMA_simulation.py                      # Simulation script for TUMA centralized and distributed decoders
+├── amp_da_simulation.py                    # AMP-DA decoding and simulation framework
 │
 ├── tests/
 │   ├── test_amp_da.py                      # AMP-DA decoding for comparison
-│   ├── test_centralized_decoder_simulation.py    # Test centralized AMP decoder in TUMA
-│   └── test_distributed_decoder_simulation.py    # Test disributed AMP decoder in TUMA
+│   ├── test_tuma_centralized.py            # Test centralized AMP decoder in TUMA
+│   └── test_tuma_distributed.py            # Test disributed AMP decoder in TUMA
 │
 └── README.md                               # Project overview and usage instructions
 ```
@@ -40,17 +43,17 @@ The project includes simulations and decoding algorithms tailored for large-scal
 Navigate to the project directory and run the test scripts from the ``tests/`` directory. For example,
 
 ```bash
-python tests/test_centralized_decoder_simulation.py
+python tests/test_tuma_centralized.py
 ```
 
 ### Simulations
 
 
-* **Centralized Decoder Simulation:** Run ``test_centralized_decoder_simulation.py`` to test the centralized decoder for a single scenario.
+* **Centralized Decoder Simulation:** Run ``tests/test_tuma_centralized.py`` to test the centralized decoder for a single scenario.
 
-* **Distributed Decoder Simulation:** Run ``test_distributed_decoder_simulation.py`` to test the distributed decoder.
+* **Distributed Decoder Simulation:** Run ``tests/test_tuma_distributed.py`` to test the distributed decoder.
 
-* **AMP-DA Simulation:** Run ``test_amp_da.py`` to test the AMP-DA decoder.
+* **AMP-DA Simulation:** Run ``tests/test_amp_da.py`` to test the AMP-DA decoder.
 
 
 ### Customization
