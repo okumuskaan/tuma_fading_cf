@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels With Cell-Free Massive MIMO.**](https://gdurisi.github.io/files/2025/okumus25-01a.pdf) 
+This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels With Cell-Free (CF) Massive MIMO.**](https://gdurisi.github.io/files/2025/okumus25-01a.pdf) 
 
 The project includes simulations and decoding algorithms tailored for large-scale random access communication under fading channels using centralized and distributed decoders. The proposed decoders builds upon multisource approximate message passing (AMP), which is adapted here to handle message collisions — a critical challenge in unsourced random access. Our decoder uses Bayesian estimation to recover both the message list and their transmission multiplicities in CF MIMO systems.
 
