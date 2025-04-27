@@ -1,12 +1,16 @@
 """
-AMP-DA Implementation and Simulation
+AMP-DA Simulation Script
 
-This file contains the AMP-DA algorithm and Monte Carlo simulation function.
+This script implements the AMP-DA algorithm and its Monte Carlo simulation
+over the TUMA framework with a fading cell-free massive MIMO setup.
 
 References:
-- L. Qiao, J. Zhang, and K. B. Letaief, "Digital Over-the-Air Aggregation for Federated Edge Learning," 
-  IEEE Transactions on Wireless Communications, 2023.
+- L. Qiao, Z. Gao, M. B. Mashadi, and D. Gunduz "Digital Over-the-Air Aggregation for Federated Edge Learning," 
+IEEE Journal on Selected Areas in Communications, 2024. 
 - https://github.com/liqiao19/MD-AirComp
+
+Author: Kaan Okumus
+Date: April 2025
 """
 
 import numpy as np
@@ -173,76 +177,62 @@ def AMP_DA(y, C, Ka, maxIte, exx=1e-10, damp=0.3):
 
 
 def simulate_AMP_DA(
-        side, topology_type, mult, jitter, multiple_zone, rows, cols,
-        A, Mau, Kau, Ju, SNR_rx_dB, rho, d0, P, n, 
-        nMCs,
-        perfect_CSI, imperfection_model, sigma_noise_e, phase_max, display_topology
+        Ju, SNR_rx_dB, Mau, Kau, A, n, side, rho, d0, P, nMCs,
+        perfect_CSI=False, imperfection_model="phase", sigma_noise_e=0, phase_max=np.pi/6, display_topology=False, plot_perf=False
 ):
     """
-    Simulates AMP-DA performance over the TUMA framework with a cell-free massive MIMO setup 
-    through multiple Monte Carlo runs.
+    Simulate AMP-DA decoding over multiple Monte Carlo runs.
 
     Parameters:
-    side : float
-        The length of the side of the simulation area.
-    topology_type : int
-        The type of network topology (e.g., grid, random placement).
-    mult : int
-        Multiplication factor for the simulation grid size.
-    jitter : float
-        Random jitter to apply to AP positions.
-    multiple_zone : bool
-        Whether the simulation includes multiple zones.
-    rows : int
-        Number of rows in the grid for user placement.
-    cols : int
-        Number of columns in the grid for user placement.
-    A : int
-        Number of antennas per access point (AP).
-    Mau : int
-        Number of users per access point (AP).
-    Kau : int
-        Total number of users in the system.
-    Ju : int
-        Number of bits per zone (\( \text{Ju} = \log_2(\text{Mu}) \)).
-    SNR_rx_dB : float
+    - Ju : int
+        Log2 of number of quantized positions.
+    - SNR_rx_dB : float
         Receiver SNR in dB.
-    rho : float
-        Path loss exponent.
-    d0 : float
-        Reference distance for path loss.
-    P : float
-        Transmission power.
-    n : int
+    - Mau, Kau : int
+        Number of users and total transmitted messages per zone.
+    - A : int
+        Number of antennas per AP.
+    - n : int
         Block length.
-    nMCs : int
+    - side : float
+        Length of simulation area.
+    - rho, d0 : float
+        Path loss parameters.
+    - P : float
+        Transmission power.
+    - nMCs : int
         Number of Monte Carlo runs.
-    perfect_CSI : bool
-        Whether perfect channel state information (CSI) is assumed.
-    imperfection_model : str
-        Model for imperfections in the channel (e.g., "phase").
-    sigma_noise_e : float
-        Noise standard deviation for channel estimation errors.
-    phase_max : float
-        Maximum phase error for the imperfection model.
+    - perfect_CSI : bool, optional
+        Assume perfect CSI if True (default: False).
+    - imperfection_model : str, optional
+        Model for imperfect CSI (default: "phase").
+    - sigma_noise_e : float, optional
+        Noise std for CSI errors (default: 0).
+    - phase_max : float, optional
+        Max phase error (default: pi/6).
+    - display_topology : bool, optional
+        Plot topology in the first run (default: False).
+    - plot_perf : bool, optional
+        Plot performance (default: False).
 
     Returns:
-    tv_dists : np.ndarray
-        Array of total variation distances for all Monte Carlo runs.
+    - tv_dists : np.ndarray
+        Array of TV distances over Monte Carlo runs.
     """
-
     tv_dists = np.zeros(nMCs)
 
     for idxMC in range(nMCs):        
         print(f"Monte Carlo Sim = {idxMC+1}/{nMCs}")
 
+        # Setup topology
         U, B, zone_centers, nus = setup_topology(
             side=side, 
-            topology_type=topology_type, 
-            mult=mult, jitter=jitter, multiple_zone=multiple_zone,
-            rows=rows, cols=cols
+            topology_type=2, 
+            mult=2, jitter=0.0, multiple_zone=True,
+            rows=3, cols=3
         )
 
+        # System parameters
         F = A*B
         Maus = [Mau]*U
         Kaus = [Kau]*U
@@ -250,6 +240,7 @@ def simulate_AMP_DA(
         Mu = 2**Ju
         Mus = [Mu]*U
 
+        # SNR, power parameters
         SNR_rx = 10**(SNR_rx_dB/10)
         min_dist = np.abs(np.array([(1+1j)*0.0]) - nus).min()
         SNR_tx = SNR_rx * (1 + (min_dist/d0)**rho)
@@ -264,16 +255,15 @@ def simulate_AMP_DA(
             return C[:,u*Mus[u]:(u+1)*Mus[u]]@x
         
         # Transmit data with pre-equalization at transmitter side
-        margin = side/10 if topology_type!=3 else -side/20
         _, Y_for_MDAircomp, k, _, _, zones_infos = transmit(Mus, Maus, Kaus, side, n, F, A, U, Cx, nP, sigma_w, 
-                            nus, zone_centers, rho, d0, margin=margin, force_Kmax=Kau, 
+                            nus, zone_centers, rho, d0, margin=side/10, force_Kmax=Kau, 
                             include_AMP_DA=True,
                             perfect_CSI=perfect_CSI, imperfection_model=imperfection_model, sigma_noise_e=sigma_noise_e, phase_max=phase_max)
         
         # Display topology for the first Monte Carlo run if enabled
         if idxMC == 0 and display_topology:
             user_positions = extract_user_positions(zones_infos)
-            plot_topology(nus, side, zone_centers, user_positions, topology_type, rows, cols)
+            plot_topology(nus, side, zone_centers, user_positions, 2, 3, 3)
 
         # Run AMP-DA
         k_hat = AMP_DA(np.expand_dims(Y_for_MDAircomp,axis=1), C, Ka, maxIte=50)
@@ -284,10 +274,20 @@ def simulate_AMP_DA(
         est_k = k_hat[:, 0, 0].real.astype(int)
         est_k = est_k.reshape(U, -1).sum(axis=0)
         est_type = est_k / (est_k.sum())
+        # Show plot if enabled
+        if plot_perf:
+            plt.figure()
+            plt.stem(real_type, label="True")
+            plt.stem(est_type, "r--", label="Est")
+            plt.legend()
+            plt.grid("True")
+            plt.title(f"True and estimated types for AMP-DA decoder")
+            plt.xlabel("Message indices")
+            plt.ylabel("Type")
+            plt.show()
         tv_dists[idxMC] = np.sum(np.abs(real_type - est_type)) / 2
-
-        print(f"TV distance: {tv_dists[idxMC]:.4f}")
+        print(f"TV distance: {tv_dists[idxMC]}")
     
-    return tv_dists, zones_infos, zone_centers
+    return tv_dists
 
 
