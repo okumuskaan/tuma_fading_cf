@@ -1,41 +1,37 @@
-# TUMA with Fading in Cell-Free Systems
+# TUMA Over Fading Channels With CF Massive MIMO
 
 ## Overview
-This repository contains the code implementation for the Type-Based Unsourced Multiple Access (TUMA) framework with fading channels in a cell-free (CF) massive MIMO system. The repository provides algorithms and simulations for centralized and distributed decoders using Approximate Message Passing (AMP) and Bayesian estimation.
 
+This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels With Cell-Free Massive MIMO.**](https://gdurisi.github.io/files/2025/okumus25-01a.pdf) 
+
+The project includes simulations and decoding algorithms tailored for large-scale random access communication under fading channels using centralized and distributed decoders. The proposed decoders builds upon multisource approximate message passing (AMP), which is adapted here to handle message collisions — a critical challenge in unsourced random access. Our decoder uses Bayesian estimation to recover both the message list and their transmission multiplicities in CF MIMO systems.
+
+## Key Features
+
+- **Cell-Free Massive MIMO support:** Includes topology and channel modeling with Rayleigh fading.
+- **Centralized and Distributed Decoders:** Based on multi-source AMP with Bayesian denoisers.
+- **Message Collisions:** Explicitly modeled and recovered through a type-based approach.
+- **Monte Carlo Simulations:** For empirical performance evaluation over realistic setups.
 
 ## Project Structure
 
-The project is organized as follows:
-
-### Root Directory
-- **README.md**: This file provides an overview of the project, its structure, and usage.
-
-### `utils/` Folder
-Contains helper files used across different modules:
-- **`helper_bayesian_denoiser.py`**: Implements Bayesian denoiser functions, including sampling-based and Onsager correction approximations.
-- **`helper_cf_tuma_tx.py`**: Provides utility functions for the transmitter, including generating use positions, multiplicities, and transmitted signals.
-- **`helper_topology.py`**: Contains functions for creating and visualizing topologies, including hexagonal grids and user placements.
-- **`amp_da_simulation.py`**: Implements the AMP-DA decoder and simulation framework.
-- **`centralized_decoder_simulation.py`**: Implements centralized decoding for TUMA with Monte Carlo simulations.
-- **`distributed_decoder_simulation.py`**: Implements distributed decoding for TUMA with Monte Carlo simulations.
-
-### `tests/` Folder
-Contains test scripts to verify and demonstrate the functionality of the different components:
-- **`test_amp_da.py`**: Example script for running the AMP-DA algorithm for a single scenario.
-- **`test_centralized_decoder_simulation.py`**: Example script for running the centralized decoder simulations.
-- **`test_distributed_decoder_simulation.py`**: Example script for running distributed decoder simulations.
-
-
-## Setup
-
-### Requirements
-- Python 3.8 or later
-- Required Python libraries:
-  - `numpy`
-  - `scipy`
-  - `matplotlib`
-
+```
+.
+├── utils/
+│   ├── helper_bayesian_denoiser.py         # Bayesian denoising functions with Onsager term
+│   ├── helper_cf_tuma_tx.py                # Transmitter-side signal and message generation
+│   ├── helper_topology.py                  # Topology creation and visualization tools
+│   ├── amp_da_simulation.py                # AMP-DA decoding and simulation framework
+│   ├── centralized_decoder_simulation.py   # Centralized AMP decoder and simulation wrapper
+│   └── distributed_decoder_simulation.py   # Distributed AMP decoder for CF setup
+│
+├── tests/
+│   ├── test_amp_da.py                      # AMP-DA decoding for comparison
+│   ├── test_centralized_decoder_simulation.py    # Test centralized AMP decoder in TUMA
+│   └── test_distributed_decoder_simulation.py    # Test disributed AMP decoder in TUMA
+│
+└── README.md                               # Project overview and usage instructions
+```
 
 ## Usage
 
@@ -56,17 +52,33 @@ python tests/test_centralized_decoder_simulation.py
 
 * **AMP-DA Simulation:** Run ``test_amp_da.py`` to test the AMP-DA decoder.
 
+
 ### Customization
 Users can modify the test scripts to experiment with different parameters, such as the number of users, antennas, SNR, and topology settings.
 
 
 
+
+## Citation
+
+If you use this code or refer to the system in your work, please cite our paper:
+
+```
+@misc{tuma_fading_2025,
+  author       = {Okumus, Kaan and Ngo, Khac-Hoang and Durisi, Giuseppe and Ström, Erik},
+  title        = {Type-Based Unsourced Multiple Access over Fading Channels with Cell-Free Massive {MIMO} (Extended Version)},
+  url          = {https://gdurisi.github.io/files/2025/okumus25-01a.pdf},
+  year         = {2025}
+}
+```
+
 ## References
 
-The AMP-DA algorithm was presented in:
+- **Multisource AMP Algorithm**:
+  B. Cakmak, E. Gkiouzepi, M. Opper, and G. Caire, "Joint Message Detection and Channel Estimation for Unsourced Random Access in Cell-Free User-Centric Wireless Networks," *IEEE Transactions on Information Theory*, 2025. [https://ieeexplore.ieee.org/abstract/document/10884602](https://ieeexplore.ieee.org/abstract/document/10884602)
 
-- L. Qiao, J. Zhang, and K. B. Letaief, "Digital Over-the-Air Aggregation for Federated Edge Learning," *IEEE Transactions on Wireless Communications*, 2023. [DOI: 10.1109/TWC.2023.10648926](https://ieeexplore.ieee.org/document/10648926)
+- **AMP-DA Algorithm**:
+  L. Qiao, Z. Gao, M. B. Mashadi, and D. Gunduz "Digital Over-the-Air Aggregation for Federated Edge Learning," *IEEE Journal on Selected Areas in Communications*, 2024. [https://ieeexplore.ieee.org/document/10648926](https://ieeexplore.ieee.org/document/10648926)
 
-The implementation of AMP-DA in this repository is based on the code from the MD-AirComp project:
-
-- GitHub Repository: [liqiao19/MD-AirComp](https://github.com/liqiao19/MD-AirComp)
+- **Code Reference**:
+  AMP-DA codes based on [liqiao19/MD-AirComp](https://github.com/liqiao19/MD-AirComp)
