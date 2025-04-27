@@ -2,33 +2,27 @@
 Helper Functions for Bayesian Denoising
 
 This file contains functions for Bayesian estimation and denoising used in the centralized decoder.
+It includes utilities for posterior computation, stable numerical tricks, and Onsager-corrected estimates.
+
+Functions:
+- log_complex_gaussian_likelihood: Log-likelihood under complex Gaussian models.
+- log_sum_exp_trick: Numerically stable log-sum-exp computation.
+- safe_log1mexp: Numerically stable computation of log(1 - exp(x)).
+- normalize_posteriors: Normalize log-posterior probabilities.
+- compute_logposteriors_with_logsumexptrick: Posterior computation with sampling approximation.
+- estimate_type_samplingbased_logsumexp: Multiplicity estimation via Bayesian sampling.
+- bayesian_channel_multiplicity_estimation_sampbasedapprox: Bayesian channel estimation (sampling-based).
+- bayesian_channel_multiplicity_estimation_sampbasedapprox_with_onsager: Channel estimation with Onsager correction.
+
+Usage:
+This module is intended for use in the TUMA centralized decoder and can be imported as:
+    from utils.helper_bayesian_denoiser import bayesian_channel_multiplicity_estimation_sampbasedapprox
 
 Author: Kaan Okumus
-Date: January 2025
+Date: April 2025
 """
 
 import numpy as np
-import scipy.stats as st
-
-
-def complex_gaussian_likelihood(x, Cov_diag):
-    """
-    Compute the likelihood of a complex Gaussian distribution.
-
-    Parameters:
-    x : np.ndarray
-        Observation vector.
-    Cov_diag : np.ndarray
-        Diagonal elements of the covariance matrix.
-
-    Returns:
-    np.ndarray
-        Likelihood of the observation vector.
-    """
-    N = len(x)
-    norm_factor = 1 / (1e-300 + np.pi ** N * np.prod(Cov_diag, axis=-1))
-    exponent = -np.sum(np.abs(x) ** 2 / Cov_diag, axis=-1)
-    return norm_factor * np.exp(exponent)
 
 def log_complex_gaussian_likelihood(r, all_Covs, T, nP, keepdims=False):
     """
@@ -38,67 +32,57 @@ def log_complex_gaussian_likelihood(r, all_Covs, T, nP, keepdims=False):
     r : np.ndarray
         Observation vector.
     all_Covs : np.ndarray
-        Covariance matrices for the sampling-based approximation.
+        Covariance matrices.
     T : np.ndarray
         Residual noise covariance.
     nP : float
         Power factor.
     keepdims : bool, optional
-        Whether to keep dimensions of the result (default: False).
+        Whether to keep dimensions in the output (default: False).
 
     Returns:
     np.ndarray
-        Log-likelihood of the observation vector.
+        Log-likelihood values.
     """
-    return (-((np.abs(r) ** 2) / (T + nP * all_Covs) + np.log(np.pi * (T + nP * all_Covs))).sum(axis=-1, keepdims=keepdims))
+    cov = T + nP * all_Covs
+    return (-((np.abs(r) ** 2) / (cov) + np.log(np.pi * (cov))).sum(axis=-1, keepdims=keepdims))
 
 def log_sum_exp_trick(logai, i_axis, keepdims=True):
     """
-    Numerically stable computation of log-sum-exp.
+    Numerically stable log-sum-exp computation.
 
     Parameters:
     logai : np.ndarray
         Logarithm of input values.
     i_axis : int
-        Axis over which to compute the log-sum-exp.
+        Axis over which to compute.
     keepdims : bool, optional
-        Whether to keep the dimensions of the result (default: True).
+        Whether to retain dimensions (default: True).
 
     Returns:
     np.ndarray
-        Log-sum-exp values.
+        Result of log-sum-exp operation.
     """
     maxlogai = np.max(logai, axis=i_axis, keepdims=True)
     res = maxlogai + np.log(np.exp(logai - maxlogai).sum(axis=i_axis, keepdims=True))
     return res if keepdims else np.squeeze(res, axis=i_axis)
 
-def compute_logposteriors_with_logsumexptrick(y, all_Covs, T, nP, Ns, log_priors=0.0):
+def safe_log1mexp(x, epsilon=1e-12):
     """
-    Compute the log-posterior probabilities using the log-sum-exp trick for numerical stability.
+    Numerically stable computation of log(1 - exp(x)).
 
     Parameters:
-    y : np.ndarray
-        Observation vector.
-    all_Covs : np.ndarray
-        All covariance matrices for the sampling-based approximation.
-    T : np.ndarray
-        Residual noise covariance.
-    nP : float
-        Power factor.
-    Ns : int
-        Number of samples for sampling-based approximation.
-    log_priors : float or np.ndarray
-        Logarithm of prior probabilities.
+    x : np.ndarray
+        Input values (should be <= 0).
+    epsilon : float, optional
+        Small constant to avoid numerical issues (default: 1e-12).
 
     Returns:
-    int, np.ndarray
-        Estimated multiplicity and log-posterior probabilities.
+    np.ndarray
+        Computed values.
     """
-    logai = (-((np.abs(y)**2)/(T + nP * all_Covs) + np.log(np.pi * (T + nP * all_Covs))).sum(axis=-1) - np.log(Ns))
-    maxlogai = np.max(logai, axis=-1, keepdims=True)
-    logposteriors = (maxlogai[:, 0] + np.log(np.exp(logai - maxlogai).sum(axis=-1))) + log_priors
-    est_type = np.argmax(logposteriors)
-    return est_type, logposteriors
+    x_clipped = np.clip(x, -np.inf, 0)  # Ensure x <= 0
+    return np.log(1 - np.exp(x_clipped) + epsilon)
 
 def normalize_posteriors(logposteriors):
     """
@@ -106,7 +90,7 @@ def normalize_posteriors(logposteriors):
 
     Parameters:
     logposteriors : np.ndarray
-        Log-posterior probabilities.
+        Log-posterior values.
 
     Returns:
     np.ndarray
@@ -116,41 +100,52 @@ def normalize_posteriors(logposteriors):
     log_sumposteriors = max_posterior + np.log(np.exp(logposteriors - max_posterior).sum())
     return np.exp(logposteriors - log_sumposteriors)
 
-def safe_log1mexp(x, epsilon=1e-12):
+def compute_logposteriors_with_logsumexptrick(y, all_Covs, T, nP, Ns, log_priors=0.0):
     """
-    Numerically stable computation of log(1 - exp(x)).
+    Compute log-posterior probabilities using log-sum-exp trick.
 
     Parameters:
-    x : np.ndarray
-        Input values (x <= 0).
-    epsilon : float, optional
-        Small constant to avoid log(0) (default: 1e-12).
+    y : np.ndarray
+        Observation vector.
+    all_Covs : np.ndarray
+        Covariance matrices.
+    T : np.ndarray
+        Residual noise covariance.
+    nP : float
+        Power factor.
+    Ns : int
+        Number of samples.
+    log_priors : float or np.ndarray, optional
+        Logarithm of prior probabilities.
 
     Returns:
-    np.ndarray
-        Logarithm of 1 - exp(x).
+    int, np.ndarray
+        Estimated multiplicity index and log-posteriors.
     """
-    x_clipped = np.clip(x, -np.inf, 0)  # Ensure x <= 0
-    return np.log(1 - np.exp(x_clipped) + epsilon)
+    logai = (-((np.abs(y)**2)/(T + nP * all_Covs) + np.log(np.pi * (T + nP * all_Covs))).sum(axis=-1) - np.log(Ns))
+    maxlogai = np.max(logai, axis=-1, keepdims=True)
+    logposteriors = (maxlogai[:, 0] + np.log(np.exp(logai - maxlogai).sum(axis=-1))) + log_priors
+    est_type = np.argmax(logposteriors)
+    return est_type, logposteriors
 
 
 def estimate_type_samplingbased_logsumexp(R, T, all_Covs, Mus, nP, log_priors):
     """
-    Estimate message multiplicities using sampling-based log-sum-exp approximation.
+    Estimate message multiplicities using sampling-based approximation.
 
     Parameters:
     R : list of np.ndarray
-        Effective observations per zone.
+        Observations for each zone.
     T : np.ndarray
         Residual noise covariance.
     all_Covs : np.ndarray
-        Covariance matrices for sampling-based approximation.
+        Covariance matrices.
     Mus : list of int
         Number of messages per zone.
     nP : float
         Power factor.
     log_priors : list of np.ndarray
-        Log-prior probabilities.
+        Log-priors per message.
 
     Returns:
     np.ndarray, list of np.ndarray
@@ -171,27 +166,25 @@ def estimate_type_samplingbased_logsumexp(R, T, all_Covs, Mus, nP, log_priors):
         posteriors.append(posteriors_u)
     return est_k, posteriors
 
-
-
 def bayesian_channel_multiplicity_estimation_sampbasedapprox(r, all_covs, taus, nP, log_priors=0.0):
     """
-    Estimate channel multiplicity using sampling-based Bayesian approximation.
+    Bayesian estimation of signal using sampling-based approximation.
 
     Parameters:
     r : np.ndarray
-        Effective observation vector.
+        Observation vector.
     all_covs : np.ndarray
-        Covariance matrices for sampling-based approximation.
+        Covariance matrices.
     taus : np.ndarray
         Residual noise covariance.
     nP : float
         Power factor.
-    log_priors : float or np.ndarray
+    log_priors : float or np.ndarray, optional
         Logarithm of prior probabilities.
 
     Returns:
     np.ndarray
-        Estimated signal for the given observations.
+        Estimated transmitted signal.
     """
     loglikelihoods_ai = log_complex_gaussian_likelihood(r, all_covs, taus, nP, keepdims=True)
     log_denum_ai = loglikelihoods_ai[1:]
@@ -213,30 +206,30 @@ def bayesian_channel_multiplicity_estimation_sampbasedapprox(r, all_covs, taus, 
     log_rightpart = log_posteriors - log_sumposteriors
 
     est_X = r * (np.exp(log_rightpart[1:, 0]) * np.exp(log_leftpart[:, 0])).sum(axis=0)
-    return est_X
 
+    return est_X
 
 def bayesian_channel_multiplicity_estimation_sampbasedapprox_with_onsager(r, all_covs, taus, nP, log_priors=0.0, withOnsager=True):
     """
-    Estimate channel multiplicity using sampling-based Bayesian approximation with Onsager correction.
+    Bayesian estimation with Onsager correction.
 
     Parameters:
     r : np.ndarray
-        Effective observation vector.
+        Observation vector.
     all_covs : np.ndarray
-        Covariance matrices for sampling-based approximation.
+        Covariance matrices.
     taus : np.ndarray
         Residual noise covariance.
     nP : float
         Power factor.
-    log_priors : float or np.ndarray
+    log_priors : float or np.ndarray, optional
         Logarithm of prior probabilities.
     withOnsager : bool, optional
-        Whether to include Onsager correction (default: True).
+        Whether to apply Onsager correction (default: True).
 
     Returns:
     np.ndarray, int, np.ndarray
-        Estimated signal, estimated multiplicity, and Onsager reaction term.
+        Estimated signal, estimated multiplicity, Onsager reaction term.
     """
     loglikelihoods_ai = log_complex_gaussian_likelihood(r, all_covs, taus, nP, keepdims=True)
     log_denum_ai = loglikelihoods_ai[1:]

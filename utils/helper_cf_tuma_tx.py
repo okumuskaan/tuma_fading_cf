@@ -6,25 +6,24 @@ It includes methods for generating system states, message types, sensor position
 vectors, as well as computing received signals.
 
 Functions:
-- `gamma`: Computes large-scale fading coefficients based on Gkiouzepi and Caire's model.
-- `qam_mod`: Maps quantized indices to quantized values.
-- `qam_demod`: Maps quantized values to quantized indices.
-- `generate_states_messages_types`: Generates active messages and their types for all zones.
-- `generate_multiplicity_sensor_positions`: Assigns sensor positions and computes the multiplicity vector.
-- `extract_user_positions`: Extracts user positions for visualization or processing.
-- `generate_X`: Computes the \( \mathbf{X} \) matrix with fading channel effects.
-- `transmit`: Simulates the transmission process, including signal generation and received signal computation.
+- gamma: Computes large-scale fading coefficients based on Gkiouzepi and Caire's model.
+- qam_mod: Maps quantized indices to quantized values.
+- qam_demod: Maps quantized values to quantized indices.
+- generate_states_messages_types: Generates active messages and their types for all zones.
+- generate_multiplicity_sensor_positions: Assigns sensor positions and computes the multiplicity vector.
+- extract_user_positions: Extracts user positions for visualization or processing.
+- generate_X: Computes the X effective fading channel matrix.
+- transmit: Simulates the transmission process, including signal generation and received signal computation.
 
 Usage:
 This module is intended for use in the TUMA framework and can be imported as:
-    from utils.helper_cf_system import transmit, gamma
+    from utils.helper_cf_tuma_tx import transmit, gamma
 
 Author: Kaan Okumus
 Date: January 2025
 """
 
 import numpy as np
-
 
 def gamma(q, v=0.0 + 1j * 0.0, rho=3.67, d0=0.01357):
     """
@@ -34,7 +33,7 @@ def gamma(q, v=0.0 + 1j * 0.0, rho=3.67, d0=0.01357):
     q : complex
         Position of the target user.
     v : complex, optional
-        Reference point or AP position (default: origin).
+        Reference AP position (default: origin).
     rho : float, optional
         Path loss exponent (default: 3.67).
     d0 : float, optional
@@ -73,7 +72,7 @@ def qam_demod(Y, M, side):
 
     Parameters:
     Y : np.ndarray
-        Array of values to quantize.
+        Array of complex values to quantize.
     M : int
         Number of quantization levels.
     side : float
@@ -81,43 +80,30 @@ def qam_demod(Y, M, side):
 
     Returns:
     np.ndarray
-        Indices of the quantized values.
+        Indices corresponding to quantized values.
     """
     qs_x = -np.linspace(-side / 2 + side / int(np.sqrt(M)) / 2, side / 2 - side / int(np.sqrt(M)) / 2, int(np.sqrt(M)))
     qs_x, qs_y = (arr.ravel() for arr in np.meshgrid(qs_x, qs_x))
     qs = qs_x + 1j * qs_y
     return np.argmin(np.abs(qs - Y), axis=1)
 
-def generate_states_messages_types(zones_infos, print_info=False, tx_types=None, force_Kmax=3):
+def generate_states_messages_types(zones_infos, print_info=False, tx_types=None, force_Kmax=None):
     """
-    Generate active messages and their transmission types for all zones.
-
-    This function assigns target positions, active messages, and transmission types
-    to each zone. It ensures unique active messages within each zone and enforces
-    a maximum multiplicity limit (`force_Kmax`).
+    Generate active messages and transmission types for all zones.
 
     Parameters:
     zones_infos : dict
-        Information about each zone. Each zone entry should include:
-        - `zone_center`: Center position of the zone (complex number).
-        - `Mu`: Number of messages per zone.
-        - `Mau`: Number of users in the zone.
-        - `Kau`: Total number of transmitted messages in the zone.
-        - `side`: Side length of the zone.
-    print_info : bool, optional
-        If `True`, prints detailed information about each zone (default: False).
+        Information about each zone.
+    print_info : bool
+        Whether to print detailed information.
     tx_types : list, optional
-        Predefined transmission types for the zones. If `None`, types are randomly
-        generated (default: None).
+        Predefined transmission types for zones (default: None).
     force_Kmax : int, optional
-        Maximum allowable multiplicity per message (default: 3).
+        Maximum multiplicity per message (default: None).
 
     Returns:
     dict
-        Updated `zones_infos` with the following additional keys for each zone:
-        - `active_msg`: Array of active message indices.
-        - `tx_type`: Array of transmission types for active messages.
-        - `target_positions`: Complex positions of the target users in the zone.
+        Updated zone information including active messages and transmission types.
     """
     for u in zones_infos.keys():
         zone_u_infos = zones_infos[u]
@@ -130,21 +116,20 @@ def generate_states_messages_types(zones_infos, print_info=False, tx_types=None,
         if print_info:
             print(f"Zone {u+1}: Mu = {Mu}, Mau = {Mau}, Kau = {Kau}")
 
-        # Generate target positions within the zone
+        # Generate random user target positions
         target_positions = side * (-0.5 + np.random.rand(Mau, 1) + 1j * (-0.5 + np.random.rand(Mau, 1)))
 
-        # Quantize positions to get active messages
+        # Quantize target positions to message indices
         active_msg = qam_demod(target_positions, Mu, side)
 
-        # Ensure unique active messages for each user
+        # Enforce uniqueness of active messages
         while np.unique(active_msg).shape[0] != Mau:
             target_positions = side * (-0.5 + np.random.rand(Mau, 1) + 1j * (-0.5 + np.random.rand(Mau, 1)))
             active_msg = qam_demod(target_positions, Mu, side)
 
-        # Generate or assign transmission types
+        # Generate transmission types
         if tx_types is None:
             tx_type = np.random.multinomial(Kau, np.ones(Mau) / Mau)
-            # Enforce multiplicity and active user constraints
             while (Mau != np.sum(tx_type != 0)) or (np.max(tx_type) > force_Kmax):
                 tx_type = np.random.multinomial(Kau, np.ones(Mau) / Mau)
         else:
@@ -154,10 +139,10 @@ def generate_states_messages_types(zones_infos, print_info=False, tx_types=None,
             print(f"  Transmission types: {tx_type}")
             print(f"  Active messages: {active_msg}")
 
-        # Align target positions to the zone center
+        # Shift positions to the center of the zone
         target_positions += zone_center
 
-        # Update zone information
+        # Update zone info
         zones_infos[u]["active_msg"] = active_msg
         zones_infos[u]["tx_type"] = tx_type
         zones_infos[u]["target_positions"] = target_positions
@@ -167,40 +152,27 @@ def generate_states_messages_types(zones_infos, print_info=False, tx_types=None,
 def generate_multiplicity_sensor_positions(zones_infos, print_info=False, spread_factor=1.0, 
                                            POS_MSG_DEPENDANCE=False, FORCE_POS_IN_GRIDS=True, margin=0.0):
     """
-    Assign sensor positions and compute the multiplicity vector for all zones.
-
-    This function assigns sensor positions for each active message based on specified constraints 
-    (e.g., grid-based placement, proximity to access points) and computes the overall multiplicity 
-    vector for all messages.
+    Assign sensor positions and compute the multiplicity vector across all zones.
 
     Parameters:
     zones_infos : dict
-        Information about each zone. Each zone entry should include:
-        - `zone_center`: Center position of the zone (complex number).
-        - `Mu`: Number of messages per zone.
-        - `Mau`: Number of users in the zone.
-        - `Kau`: Total number of transmitted messages in the zone.
-        - `active_msg`: Array of active message indices.
-        - `tx_type`: Array of transmission types for active messages.
-        - `side`: Side length of the zone.
-        - (Optional) `Qus`: Predefined grid points for message placement.
+        Information about each zone.
     print_info : bool, optional
-        If `True`, prints detailed information about each zone (default: False).
+        Whether to print detailed information (default: False).
     spread_factor : float, optional
-        Scaling factor for random sensor placement (default: 1.0).
+        Factor controlling random spread of sensors (default: 1.0).
     POS_MSG_DEPENDANCE : bool, optional
-        If `True`, sensor positions depend on target positions (default: False).
+        Whether sensor placement depends on message positions (default: False).
     FORCE_POS_IN_GRIDS : bool, optional
-        If `True`, sensor positions are restricted to predefined grid points (default: True).
+        Whether to force positions to lie on predefined grids (default: True).
     margin : float, optional
-        Margin to leave around the edges of the zone for sensor placement (default: 0.0).
+        Margin to leave from zone boundaries (default: 0.0).
 
     Returns:
-    tuple
-        zones_infos : dict
-            Updated zone information with assigned sensor positions.
-        k : np.ndarray
-            Multiplicity vector for all zones and messages.
+    zones_infos : dict
+        Updated zone information including sensor positions.
+    k : np.ndarray
+        Multiplicity vector across all zones.
     """
     # Total number of messages across all zones
     M = sum([zones_infos[u]["Mu"] for u in zones_infos.keys()])
@@ -274,26 +246,19 @@ def generate_multiplicity_sensor_positions(zones_infos, print_info=False, spread
 
 def extract_user_positions(zones_infos, return_Qs=False):
     """
-    Extract user positions from all zones for visualization or further processing.
-
-    This function consolidates user positions across all zones into a single array. 
-    Optionally, it can also return predefined grid points (\( \mathcal{Q}_u \)) 
-    for each zone.
+    Extract all user sensor positions across zones.
 
     Parameters:
     zones_infos : dict
-        Information about each zone, including:
-        - `sensor_positions`: Dictionary of sensor positions for each active message.
-        - (Optional) `Qus`: Predefined grid points for each zone.
+        Information about each zone.
     return_Qs : bool, optional
-        If `True`, returns predefined grid points along with user positions 
-        (default: False).
+        Whether to also return grid point arrays (default: False).
 
     Returns:
     np.ndarray
-        Array of all user positions across all zones.
-    np.ndarray (optional)
-        Array of predefined grid points (\( \mathcal{Q}_u \)) if `return_Qs=True`.
+        User sensor positions (flattened array).
+    np.ndarray, optional
+        Grid points (if return_Qs=True).
     """
     sensor_positions = []
     if return_Qs:
@@ -320,20 +285,15 @@ def extract_user_positions(zones_infos, return_Qs=False):
 def generate_X(zones_infos, k, B, A, rho, d0, nus, print_info=False, include_AMP_DA=False, 
                perfect_CSI=True, imperfection_model="phase", sigma_noise_e=1, phase_max=np.pi/6):
     """
-    Generate the \( \mathbf{X} \) matrix representing the fading channel-affected multiplicity vectors.
-
-    Optionally, this function generates \( \mathbf{X}_{\text{for\_MDAircomp}} \) for AMP-DA simulation, 
-    incorporating imperfect CSI if specified.
+    Generate the X effective fading channel matrices.
 
     Parameters:
     zones_infos : dict
-        Information about each zone, including:
-        - `Mu`: Number of messages in the zone.
-        - `sensor_positions`: Positions of sensors corresponding to each active message.
+        Information about each zone.
     k : np.ndarray
-        Multiplicity vector across all zones.
+        Multiplicity vector.
     B : int
-        Number of access points (APs).
+        Number of APs.
     A : int
         Number of antennas per AP.
     rho : float
@@ -341,26 +301,25 @@ def generate_X(zones_infos, k, B, A, rho, d0, nus, print_info=False, include_AMP
     d0 : float
         Reference distance for path loss.
     nus : np.ndarray
-        Positions of the APs.
+        AP positions.
     print_info : bool, optional
-        If `True`, prints details about the generated \( \mathbf{X} \) (default: False).
+        Whether to print debug information (default: False).
     include_AMP_DA : bool, optional
-        If `True`, generates \( \mathbf{X}_{\text{for\_MDAircomp}} \) for AMP-DA simulation (default: False).
+        Whether to generate X_for_MDAircomp (default: False).
     perfect_CSI : bool, optional
-        If `True`, assumes perfect channel state information (CSI) (default: True).
+        Assume perfect CSI if True (default: True).
     imperfection_model : str, optional
-        Specifies the CSI imperfection model ("awgn" or "phase") (default: "phase").
+        Imperfect CSI model: "phase" or "awgn" (default: "phase").
     sigma_noise_e : float, optional
-        Standard deviation of noise for imperfect CSI (default: 1).
+        Noise std deviation if AWGN model is used (default: 1).
     phase_max : float, optional
-        Maximum phase error for the "phase" imperfection model (default: \( \pi / 6 \)).
+        Maximum phase error in radians (default: pi/6).
 
     Returns:
-    tuple
-        X : list
-            List of \( \mathbf{X}_u \) matrices for all zones, each of shape (\( M_u, F \)).
-        X_for_MDAircomp : list (optional)
-            List of \( \mathbf{X}_{\text{for\_MDAircomp}, u} \) matrices for AMP-DA simulation, if `include_AMP_DA=True`.
+    X : list of np.ndarray
+        List of X_u matrices for all zones.
+    X_for_MDAircomp : list of np.ndarray, optional
+        List of X_u for AMP-DA (if include_AMP_DA=True).
     """
     X = []
     if include_AMP_DA:
@@ -433,80 +392,50 @@ def transmit(Mus, Maus, Kaus, side, n, F, A, U, Cx, nP, sigma_w, nus, zone_cente
              tx_types=None, POS_MSG_DEPENDANCE=False, FORCE_POS_IN_GRIDS=False, 
              J_for_Qus=None, print_info=False, force_Kmax=3):
     """
-    Simulates the transmission process in the TUMA framework with cell-free massive MIMO.
+    Simulate the transmission process for TUMA with CF massive MIMO.
 
     Parameters:
-    Mus : list[int]
-        List of numbers of messages (\( M_u \)) per zone.
-    Maus : list[int]
-        List of numbers of users (\( M_{au} \)) per zone.
-    Kaus : list[int]
-        List of total transmitted messages (\( K_{au} \)) per zone.
+    Mus, Maus, Kaus : list
+        Messages, users, and total transmissions per zone.
     side : float
-        Length of the side of the simulation area.
+        Side length of each zone.
     n : int
-        Block length.
+        Blocklength.
     F : int
-        Total number of antennas (\( B \times A \)).
+        Total number of antennas.
     A : int
-        Number of antennas per AP.
+        Antennas per AP.
     U : int
         Number of zones.
     Cx : callable
-        Function to compute \( \mathbf{C}_u \mathbf{X}_u \).
+        Function to generate C_u * X_u.
     nP : float
-        Total transmission power per user.
+        Transmission power scaling factor.
     sigma_w : float
         Noise standard deviation.
     nus : np.ndarray
-        Positions of the APs.
+        AP positions.
     zone_centers : np.ndarray
-        Centers of the zones.
-    rho : float
-        Path loss exponent.
-    d0 : float
-        Reference distance for path loss.
-    margin : float, optional
-        Margin to leave around the edges of the zone for sensor placement (default: 0.0).
-    include_AMP_DA : bool, optional
-        If `True`, prepares data for AMP-DA simulation (default: False).
-    perfect_CSI : bool, optional
-        If `True`, assumes perfect channel state information (CSI) (default: True).
-    imperfection_model : str, optional
-        Specifies the CSI imperfection model ("awgn" or "phase") (default: "phase").
-    sigma_noise_e : float, optional
-        Standard deviation of noise for imperfect CSI (default: 1).
-    phase_max : float, optional
-        Maximum phase error for the "phase" imperfection model (default: \( \pi / 6 \)).
-    tx_types : list[np.ndarray], optional
-        Transmission types for each zone. If `None`, types are generated randomly (default: None).
-    POS_MSG_DEPENDANCE : bool, optional
-        If `True`, sensor positions depend on target positions (default: False).
-    FORCE_POS_IN_GRIDS : bool, optional
-        If `True`, sensor positions are restricted to predefined grid points (default: False).
-    J_for_Qus : int, optional
-        Number of quantization bits for grid points (\( J_u \)), required if `FORCE_POS_IN_GRIDS=True`.
-    print_info : bool, optional
-        If `True`, prints detailed information about the transmission process (default: False).
-    force_Kmax : int, optional
-        Maximum multiplicity per active message (default: 3).
+        Zone center positions.
+    rho, d0 : floats
+        Path loss parameters.
+    Other parameters:
+        As previously defined.
 
     Returns:
-    tuple
-        Y : np.ndarray
-            Received signal matrix.
-        (Optional) Y_for_MDAircomp : np.ndarray
-            Received signal matrix for AMP-DA simulation, if `include_AMP_DA=True`.
-        k : np.ndarray
-            Multiplicity vector across all zones.
-        X : list
-            List of \( \mathbf{X}_u \) matrices for all zones.
-        (Optional) X_for_MDAircomp : list
-            List of \( \mathbf{X}_{\text{for\_MDAircomp}, u} \) matrices, if `include_AMP_DA=True`.
-        zones_infos : dict
-            Updated zone information.
+    Y : np.ndarray
+        Received signal matrix.
+    k : np.ndarray
+        Multiplicity vector across all zones.
+    X : np.ndarray or list of np.ndarray
+        Effective fading channel matrices X_u for all zones.
+    zones_infos : dict
+        Updated zone information including active messages and sensor positions.
+    Y_for_MDAircomp : np.ndarray, optional
+        Received signal matrix adapted for AMP-DA decoding (only if include_AMP_DA=True).
+    X_for_MDAircomp : list of np.ndarray, optional
+        Effective fading channel matrices adapted for AMP-DA decoding (only if include_AMP_DA=True).
     """
-    M = sum(Mus)  # Total number of messages
     B = len(nus)  # Total number of APs
 
     # Initialize zone information
@@ -555,4 +484,4 @@ def transmit(Mus, Maus, Kaus, side, n, F, A, U, Cx, nP, sigma_w, nus, zone_cente
             Y_for_MDAircomp += np.sqrt(nP) * Cx(X_for_MDAircomp[u], u)
         return Y, Y_for_MDAircomp, k, X, X_for_MDAircomp, zones_infos
 
-    return Y, k, X, zones_infos
+    return Y, k, np.array(X), zones_infos
