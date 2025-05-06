@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels With Cell-Free (CF) Massive MIMO.**](https://gdurisi.github.io/files/2025/okumus25-01a.pdf) 
+This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels With Cell-Free (CF) Massive MIMO.**](https://arxiv.org/abs/2504.19954) 
 
 The project includes simulations and decoding algorithms tailored for large-scale random access communication under fading channels using centralized and distributed decoders. The proposed decoders builds upon multisource approximate message passing (AMP), which is adapted here to handle message collisions — a critical challenge in unsourced random access. Our decoder uses Bayesian estimation to recover both the message list and their transmission multiplicities in CF MIMO systems.
 
@@ -68,10 +68,14 @@ If you use this code or refer to the system in your work, please cite our paper:
 
 ```
 @misc{tuma_fading_2025,
-  author       = {Okumus, Kaan and Ngo, Khac-Hoang and Durisi, Giuseppe and Ström, Erik},
-  title        = {Type-Based Unsourced Multiple Access over Fading Channels with Cell-Free Massive {MIMO} (Extended Version)},
-  url          = {https://gdurisi.github.io/files/2025/okumus25-01a.pdf},
-  year         = {2025}
+      title={Type-Based Unsourced Multiple Access over Fading Channels with Cell-Free Massive {MIMO}}, 
+      author={Kaan Okumus and Khac-Hoang Ngo and Giuseppe Durisi and Erik G. Ström},
+      year={2025},
+      eprint={2504.19954},
+      archivePrefix={arXiv},
+      primaryClass={cs.IT},
+      url={https://arxiv.org/abs/2504.19954}, 
+      month={Apr.}
 }
 ```
 
