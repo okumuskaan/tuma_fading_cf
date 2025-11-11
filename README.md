@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels with Cell-Free (CF) Massive MIMO**](https://ieeexplore.ieee.org/document/11195493), presented at ISIT 2025.
+This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels with Cell-Free (CF) Massive MIMO**](https://ieeexplore.ieee.org/document/11195493), presented at IEEE ISIT 2025.
 
 The project includes simulations and decoding algorithms tailored for large-scale random access communication under fading channels using centralized and distributed decoders. The proposed decoders builds upon multisource approximate message passing (AMP), which is adapted here to handle message collisions — a critical challenge in unsourced random access. Our decoder uses Bayesian estimation to recover both the message list and their transmission multiplicities in CF MIMO systems.
 
