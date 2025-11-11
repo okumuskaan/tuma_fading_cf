@@ -1,8 +1,8 @@
-# TUMA Over Fading Channels With CF Massive MIMO
+# Type-Based Unsourced Multiple Access Over Fading Channels with Cell-Free Massive MIMO
 
 ## Overview
 
-This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels With Cell-Free (CF) Massive MIMO.**](https://arxiv.org/abs/2504.19954) 
+This repository contains the implementation of the algorithm presented in our paper, [**Type-Based Unsourced Multiple Access (TUMA) Over Fading Channels with Cell-Free (CF) Massive MIMO.**](https://ieeexplore.ieee.org/document/11195493) presented at ISIT 2025.
 
 The project includes simulations and decoding algorithms tailored for large-scale random access communication under fading channels using centralized and distributed decoders. The proposed decoders builds upon multisource approximate message passing (AMP), which is adapted here to handle message collisions — a critical challenge in unsourced random access. Our decoder uses Bayesian estimation to recover both the message list and their transmission multiplicities in CF MIMO systems.
 
@@ -67,15 +67,14 @@ Users can modify the test scripts to experiment with different parameters, such 
 If you use this code or refer to the system in your work, please cite our paper:
 
 ```
-@misc{tuma_fading_2025,
-      title={Type-Based Unsourced Multiple Access over Fading Channels with Cell-Free Massive {MIMO}}, 
-      author={Kaan Okumus and Khac-Hoang Ngo and Giuseppe Durisi and Erik G. Ström},
-      year={2025},
-      eprint={2504.19954},
-      archivePrefix={arXiv},
-      primaryClass={cs.IT},
-      url={https://arxiv.org/abs/2504.19954}, 
-      month={Apr.}
+@INPROCEEDINGS{tuma_fading_2025,
+  author={Okumus, Kaan and Ngo, Khac-Hoang and Durisi, Giuseppe and Ström, Erik G.},
+  booktitle={2025 IEEE International Symposium on Information Theory (ISIT)}, 
+  title={Type-Based Unsourced Multiple Access Over Fading Channels with Cell-Free Massive MIMO}, 
+  year={2025},
+  month={June},
+  keywords={Fading channels;Spatial diversity;Message passing;Massive MIMO;Receivers;Robustness;Decoding;Partitioning algorithms;Large-scale systems;Signal to noise ratio},
+  doi={10.1109/ISIT63088.2025.11195493}
 }
 ```
 
