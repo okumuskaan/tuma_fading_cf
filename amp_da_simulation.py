@@ -5,7 +5,8 @@ This script implements the AMP-DA algorithm and its Monte Carlo simulation
 over the TUMA framework with a fading cell-free massive MIMO setup.
 
 References:
-- L. Qiao, Z. Gao, M. B. Mashadi, and D. Gunduz "Digital Over-the-Air Aggregation for Federated Edge Learning," 
+- L. Qiao, Z. Gao, M. B. Mashadi, and D. Gunduz "Massive Digital Over-the-Air Computation for
+Communication-Efficient Federated Edge Learning," 
 IEEE Journal on Selected Areas in Communications, 2024. 
 - https://github.com/liqiao19/MD-AirComp
 
