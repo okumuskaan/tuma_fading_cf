@@ -83,7 +83,7 @@ If you use this code or refer to the system in your work, please cite our paper:
   B. Cakmak, E. Gkiouzepi, M. Opper, and G. Caire, "Joint Message Detection and Channel Estimation for Unsourced Random Access in Cell-Free User-Centric Wireless Networks," *IEEE Transactions on Information Theory*, 2025. [https://ieeexplore.ieee.org/abstract/document/10884602](https://ieeexplore.ieee.org/abstract/document/10884602)
 
 - **AMP-DA Algorithm**:
-  L. Qiao, Z. Gao, M. B. Mashadi, and D. Gunduz "Digital Over-the-Air Aggregation for Federated Edge Learning," *IEEE Journal on Selected Areas in Communications*, 2024. [https://ieeexplore.ieee.org/document/10648926](https://ieeexplore.ieee.org/document/10648926)
+  L. Qiao, Z. Gao, M. B. Mashadi, and D. Gunduz "Massive Digital Over-the-Air Computation for Communication-Efficient Federated Edge Learning," *IEEE Journal on Selected Areas in Communications*, 2024. [https://ieeexplore.ieee.org/document/10648926](https://ieeexplore.ieee.org/document/10648926)
 
 - **Code Reference**:
   AMP-DA codes based on [liqiao19/MD-AirComp](https://github.com/liqiao19/MD-AirComp)
